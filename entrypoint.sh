@@ -2,6 +2,14 @@
 
 set -e
 
+# Unwrap the payload in case the github event is equal to repository-dispatch
+# This allows to use this action together with peter-evans/slash-command-dispatch
+# to centralize the management of slash commands
+if [[ "$GITHUB_EVENT_NAME" == "repository_dispatch" ]]; then
+	jq -r ".client_payload.github.payload" "$GITHUB_EVENT_PATH" | \
+		sponge "$GITHUB_EVENT_PATH"
+fi
+
 PR_NUMBER=$(jq -r ".pull_request.number" "$GITHUB_EVENT_PATH")
 if [[ "$PR_NUMBER" == "null" ]]; then
 	PR_NUMBER=$(jq -r ".issue.number" "$GITHUB_EVENT_PATH")
